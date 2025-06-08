@@ -15,9 +15,9 @@ class Campaign(models.Model):
     ]
 
     # базовые
-    name = models.CharField(max_length=120, unique=True)
+    name = models.CharField(max_length=120)  # дубликаты разрешены
     country = models.CharField(max_length=64, blank=True)
-    category = models.CharField(max_length=64, blank=True)
+    category = models.CharField(max_length=120, blank=True)  # увеличиваем лимит
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     started_at = models.DateTimeField(null=True, blank=True)
     stopped_at = models.DateTimeField(null=True, blank=True)
@@ -44,7 +44,9 @@ class CampaignVariant(models.Model):
     offer = models.ForeignKey("campaigns.Offer", on_delete=models.CASCADE)
     headline = models.ForeignKey("ai_module.GeneratedHeadline", null=True, blank=True, on_delete=models.SET_NULL)
     preview_image_url = models.URLField(blank=True)
-
+    leads      = models.PositiveIntegerField(default=0)
+    approvals  = models.PositiveIntegerField(default=0)
+    payout     = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     weight = models.PositiveSmallIntegerField(default=1)
     clicks = models.PositiveIntegerField(default=0)
     conversions = models.PositiveIntegerField(default=0)
@@ -72,3 +74,19 @@ class Offer(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TrafficPath(models.Model):
+    campaign   = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="paths")
+    name       = models.CharField(max_length=200)
+    clicks     = models.PositiveIntegerField(default=0)
+    conversions= models.PositiveIntegerField(default=0)
+    cost       = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    revenue    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("campaign", "name")
+
+    def cr(self):
+        return (self.conversions / self.clicks * 100) if self.clicks else 0

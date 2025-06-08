@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Tag, Campaign, CampaignVariant
+from .models import Tag, Campaign, CampaignVariant, TrafficPath
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,13 +13,20 @@ class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
         fields = '__all__'
+        extra_kwargs = {
+            "country":  {"required": False, "allow_blank": True},
+            "category": {"required": False, "allow_blank": True},
+        }
 
     def get_roi(self, obj):
         return obj.roi()
 
 class CampaignVariantSerializer(serializers.ModelSerializer):
-    campaign = CampaignSerializer(read_only=True)
-
     class Meta:
         model = CampaignVariant
-        fields = '__all__'
+        fields = "__all__"
+
+class TrafficPathSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrafficPath
+        fields = "__all__"

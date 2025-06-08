@@ -1,9 +1,11 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Sum
 from datetime import datetime, timedelta
-from .models import Tag, Campaign
-from .serializers import TagSerializer, CampaignSerializer
+from .models import Tag, Campaign, TrafficPath, CampaignVariant
+from .serializers import TagSerializer, CampaignSerializer, TrafficPathSerializer, CampaignVariantSerializer
+import random
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
@@ -15,23 +17,23 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def stats(self, request, pk=None):
-        obj = self.get_object()
-        date_from = request.GET.get("from")
-        date_to = request.GET.get("to")
+        return Response([])
 
-        try:
-            date_from = datetime.fromisoformat(date_from) if date_from else datetime.utcnow() - timedelta(days=29)
-            date_to = datetime.fromisoformat(date_to) if date_to else datetime.utcnow()
-        except Exception:
-            return Response({"error": "invalid date"}, status=400)
+class TrafficPathViewSet(viewsets.ModelViewSet):
+    queryset = TrafficPath.objects.all()
+    serializer_class = TrafficPathSerializer
 
-        delta = (date_to - date_from).days + 1
-        data = []
-        for i in range(delta):
-            d = date_from + timedelta(days=i)
-            data.append({
-                "date": d.date().isoformat(),
-                "clicks": 50 + i * 2,
-                "conversions": (i % 5) + 1
-            })
-        return Response(data)
+    @action(detail=False, methods=["post"])
+    def bayes(self, request):
+        path_ids = request.data.get("path_ids", [])
+        return Response([])
+
+class CampaignVariantViewSet(viewsets.ModelViewSet):
+    queryset = CampaignVariant.objects.all()
+    serializer_class = CampaignVariantSerializer
+    def get_queryset(self):
+        qs = super().get_queryset()
+        campaign_id = self.request.query_params.get("campaign")
+        if campaign_id:
+            qs = qs.filter(campaign_id=campaign_id)
+        return qs

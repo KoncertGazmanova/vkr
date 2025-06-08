@@ -1,10 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .api import TagViewSet, CampaignViewSet
+from .api import TagViewSet, CampaignViewSet, TrafficPathViewSet, CampaignVariantViewSet
 
 router = DefaultRouter()
 router.register(r'tags', TagViewSet)
 router.register(r'campaigns', CampaignViewSet)
+router.register(r'paths', TrafficPathViewSet, basename='paths')
+router.register(r'variants', CampaignVariantViewSet, basename='variants')
 
 urlpatterns = [
     path('', include(router.urls)),
