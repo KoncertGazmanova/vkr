@@ -84,9 +84,67 @@ class TrafficPath(models.Model):
     cost       = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     revenue    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    leads = models.PositiveIntegerField(default=0)
+    approvals = models.PositiveIntegerField(default=0)
+    payout = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     class Meta:
         unique_together = ("campaign", "name")
 
     def cr(self):
         return (self.conversions / self.clicks * 100) if self.clicks else 0
+    
+class CampaignStat(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="stats")
+    date = models.DateField()
+    hour = models.PositiveSmallIntegerField(default=0)
+    clicks = models.PositiveIntegerField(default=0)
+    conversions = models.PositiveIntegerField(default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    revenue = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+    def roi(self):
+        return (self.revenue - self.cost) / self.cost * 100 if self.cost else 0
+
+    class Meta:
+        unique_together = ("campaign", "date", "hour")
+        indexes = [
+            models.Index(fields=["campaign", "date"]),
+            models.Index(fields=["campaign", "date", "hour"]),
+        ]
+
+class CampaignHeadline(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="headlines")
+    title = models.CharField(max_length=200)
+    ctr = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+class CampaignNote(models.Model):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="notes")
+    content = models.TextField()
+    last_edited = models.DateTimeField(auto_now=True)
+
+class TeaserMetric(models.Model):
+    campaign    = models.ForeignKey(
+        "Campaign",
+        on_delete=models.CASCADE,
+        related_name="teasers"
+    )
+    teaser_id   = models.PositiveIntegerField()
+    clicks      = models.PositiveIntegerField(default=0)
+    conversions = models.PositiveIntegerField(default=0)
+    cost        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    revenue     = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "campaigns_teasermetric"   # ← Точно имя существующей таблицы
+        managed  = False                      # ← Не трогаем её миграциями
+        unique_together = ("campaign", "teaser_id")
+
+    def roi(self):
+        return (self.revenue - self.cost) / self.cost * 100 if self.cost else 0
+
+    def __str__(self):
+        return f"T{self.teaser_id} / camp {self.campaign_id}"
+    
