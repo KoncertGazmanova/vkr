@@ -147,4 +147,3 @@ class TeaserMetric(models.Model):
 
     def __str__(self):
         return f"T{self.teaser_id} / camp {self.campaign_id}"
-    
