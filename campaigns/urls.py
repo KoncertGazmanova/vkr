@@ -13,6 +13,8 @@ router.register(r'notes', CampaignNoteViewSet, basename='notes')
 
 urlpatterns = [
     path('', include(router.urls)),
+    # ### TF include traffic filter urls
+    path('', include('campaigns.traffic_filter.urls')),
 
     path('tags/', TagViewSet.as_view({'get': 'list', 'post': 'create'}), name='tags-list-create'),
     path('tags/<int:pk>/', TagViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='tags-detail'),

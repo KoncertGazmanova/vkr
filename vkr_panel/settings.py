@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-swjz3ejqyg)p^*53-p1^2#xn7-z+ldhr=r=se4rp#e5+^@7ac5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["testserver", "localhost"]
 
 
 # Application definition
@@ -135,3 +135,8 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "COERCE_DECIMAL_TO_STRING": False,
 }
+
+# ### TF defaults
+TRAFFICFILTER_ALLOWED_COUNTRIES = ['RU', 'UA']
+TRAFFICFILTER_RATE_LIMIT = 60
+TRAFFICFILTER_LOG_BLOCKS = True

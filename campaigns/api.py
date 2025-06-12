@@ -5,6 +5,7 @@ from django.db.models import Sum, Count, F, Subquery, OuterRef, DecimalField, Ex
 from datetime import datetime, timedelta
 from .models import Tag, Campaign, TrafficPath, CampaignVariant, CampaignStat, CampaignHeadline, CampaignNote, TeaserMetric
 from .serializers import TagSerializer, CampaignSerializer, TrafficPathSerializer, CampaignVariantSerializer, CampaignStatSerializer, CampaignHeadlineSerializer, CampaignNoteSerializer, TeaserMetricCurrentSerializer, TeaserMetricDeltaSerializer
+from campaigns.traffic_filter.filters import apply_filters
 import random
 from django_filters import rest_framework as df
 from rest_framework.generics import ListAPIView
@@ -56,6 +57,23 @@ class CampaignViewSet(viewsets.ModelViewSet):
 class TrafficPathViewSet(viewsets.ModelViewSet):
     queryset = TrafficPath.objects.all()
     serializer_class = TrafficPathSerializer
+
+    def create(self, request, *args, **kwargs):
+        # ### TF apply filters before counting click
+        campaign_id = request.data.get("campaign")
+        if campaign_id:
+            try:
+                campaign = Campaign.objects.get(pk=campaign_id)
+            except Campaign.DoesNotExist:
+                return Response({"detail": "Campaign not found"}, status=404)
+            allowed, reason = apply_filters(request, campaign)
+            if not allowed:
+                return Response({"detail": "Blocked", "reason": reason}, status=403)
+
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            response.status_code = 200
+        return response
 
     @action(detail=False, methods=["post"])
     def bayes(self, request):
